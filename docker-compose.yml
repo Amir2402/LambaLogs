@@ -1,9 +1,20 @@
 version: '3.8'
+
+networks:
+  lambdaLogs:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+        
 services:
   # Zookeeper for Kafka
   zookeeper:
     image: bitnami/zookeeper
     container_name: zookeeper
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.2
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ALLOW_ANONYMOUS_LOGIN: 'yes'
@@ -16,6 +27,9 @@ services:
     container_name: kafka-broker-1
     depends_on:
       - zookeeper
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.3
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -30,6 +44,9 @@ services:
     container_name: kafka-broker-2
     depends_on:
       - zookeeper
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.4
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -42,6 +59,9 @@ services:
   spark-master:
     image: bitnami/spark
     container_name: spark-master
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.5
     environment:
       - SPARK_MODE=master
       - SPARK_MASTER_PORT=7077
@@ -54,6 +74,9 @@ services:
   spark-worker-1:
     image: bitnami/spark
     container_name: spark-worker-1
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.6
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
@@ -67,6 +90,9 @@ services:
   spark-worker-2:
     image: bitnami/spark
     container_name: spark-worker-2
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.7
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
