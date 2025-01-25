@@ -25,4 +25,5 @@ def readLogs(brokers):
     except: 
         print("Stream ended or error occured") 
 
-readLogs(BROKERS) 
+if __name__ == "__main__": 
+    readLogs(BROKERS) 

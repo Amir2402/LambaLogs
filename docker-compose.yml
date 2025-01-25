@@ -62,6 +62,8 @@ services:
     networks:
       lambdaLogs:
         ipv4_address: 172.18.0.5
+    volumes:
+      - ./consumers:/opt/bitnami/spark/consumers
     environment:
       - SPARK_MODE=master
       - SPARK_MASTER_PORT=7077

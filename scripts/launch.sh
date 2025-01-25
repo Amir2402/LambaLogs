@@ -1,6 +1,7 @@
 #/usr/bin/bash
 
 COMPOSE_FILE="../docker-compose.yml"
+
 containers=$(sudo docker-compose -f "$COMPOSE_FILE" ps -q)
 
 if [ -n "$containers" ]; then 
@@ -26,8 +27,11 @@ else
     --replication-factor 2 --partitions 2 --topic logTopic
 fi 
 
-../input/flog -l -d 1 -f json | python ../input/logProducer.py & 
-ProcessID="$!"
+../input/flog -l -d 2 -f json | python ../input/logProducer.py & 
 
-echo "hey"
-echo "$ProcessID"
+ProcessID="$!"
+echo "Producer PID: $ProcessID"
+
+sudo docker exec -it spark-master bash spark-submit --master spark://spark-master:7077 --deploy-mode client --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4 --conf spark.executor.cores=4 --conf spark.executor.memory=512m ./consumers/streaming/sparkStreamingJob.py 
+
+kill "$ProcessID"
