@@ -10,7 +10,7 @@ networks:
 services:
   # Zookeeper for Kafka
   zookeeper:
-    image: bitnami/zookeeper
+    image: confluentinc/cp-zookeeper
     container_name: zookeeper
     networks:
       lambdaLogs:
@@ -18,12 +18,13 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ALLOW_ANONYMOUS_LOGIN: 'yes'
+      ZOOKEEPER_SERVER_ID: 1 
     ports:
       - "2181:2181"
 
   # Kafka Broker 1
   kafka-broker-1:
-    image: bitnami/kafka
+    image: confluentinc/cp-kafka
     container_name: kafka-broker-1
     depends_on:
       - zookeeper
@@ -40,7 +41,7 @@ services:
 
   # Kafka Broker 2
   kafka-broker-2:
-    image: bitnami/kafka
+    image: confluentinc/cp-kafka
     container_name: kafka-broker-2
     depends_on:
       - zookeeper
@@ -54,6 +55,22 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
     ports:
       - "9093:9093"
+
+  kafka-broker-3:
+    image: confluentinc/cp-kafka
+    container_name: kafka-broker-3
+    depends_on:
+      - zookeeper
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.10
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-3:9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094
+    ports:
+      - "9094:9094"
 
   # Spark Master
   spark-master:
@@ -103,3 +120,59 @@ services:
       - spark-master
     ports:
       - "8082:8082"
+  
+  kafka-connect:
+    image: 'confluentinc/cp-kafka-connect'
+    container_name: 'kafka-connect'
+    hostname: 'kafka-connect'
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.8
+    ports:
+      - '8083:8083'
+    volumes:
+      - ./kafka-connect/jars:/etc/kafka-connect/jars
+      - ./kafka-connect/connectors:/etc/kafka-connect/connectors
+    environment:
+      - CONNECT_BOOTSTRAP_SERVERS=kafka-broker-1:9092,kafka-broker-2:9093,kafka-broker-3:9094
+      - CONNECT_REST_PORT=8082
+      - CONNECT_GROUP_ID=cassandraConnect
+      - CONNECT_CONFIG_STORAGE_TOPIC=cassandraconnect-config
+      - CONNECT_OFFSET_STORAGE_TOPIC=cassandraconnect-offset
+      - CONNECT_STATUS_STORAGE_TOPIC=cassandraconnect-status
+      - CONNECT_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_INTERNAL_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_INTERNAL_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=2
+      - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=2
+      - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=2
+      - CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE=false
+      - CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE=false
+      - CONNECT_REST_ADVERTISED_HOST_NAME=kafka-connect
+      - CONNECT_PLUGIN_PATH=/etc/kafka-connect/jars
+    depends_on:
+      - zookeeper
+      - kafka-broker-1
+      - kafka-broker-2
+      
+  kafka-sr:
+    image: 'confluentinc/cp-schema-registry'
+    container_name: 'kafka-sr'
+    hostname: 'kafka-sr'
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.9
+    ports:
+      - '8084:8081'
+    environment:
+      - SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS=kafka-broker-1:9092,kafka-broker-2:9093,kafka-broker-3:9094
+      - SCHEMA_REGISTRY_HOST_NAME=kafka-sr
+      - SCHEMA_REGISTRY_LISTENERS=http://kafka-sr:8081
+      - SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR=2
+      - SCHEMA_REGISTRY_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=2
+    depends_on:
+      - zookeeper
+      - kafka-broker-1
+      - kafka-broker-2 
+      - kafka-broker-3
