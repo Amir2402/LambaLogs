@@ -3,6 +3,7 @@
 COMPOSE_FILE="../docker-compose.yml"
 
 containers=$(sudo docker-compose -f "$COMPOSE_FILE" ps -q)
+source ~/dirs/myenv/bin/activate
 
 if [ -n "$containers" ]; then 
     echo "containers are up"; 
@@ -32,6 +33,9 @@ fi
 ProcessID="$!"
 echo "Producer PID: $ProcessID"
 
-sudo docker exec -it spark-master bash spark-submit --master spark://spark-master:7077 --deploy-mode client --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4 --conf spark.executor.cores=4 --conf spark.executor.memory=512m ./consumers/streaming/sparkStreamingJob.py 
+# sudo docker exec -it cassandra cqlsh -e "CREATE KEYSPACE logKeyspace WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 1};"
+# sudo docker exec -it cassandra cqlsh -e "CREATE TABLE logKeyspace.log_table(host text PRIMARY KEY, user_identifier text, datetime text, method text, request text, protocol text, status text, bytes text, referer text);"
 
-kill "$ProcessID"
+# sudo docker exec -it spark-master bash spark-submit --master spark://spark-master:7077 --deploy-mode client --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4 --conf spark.executor.cores=4 --conf spark.executor.memory=512m ./consumers/streaming/sparkStreamingJob.py 
+
+# kill "$ProcessID"

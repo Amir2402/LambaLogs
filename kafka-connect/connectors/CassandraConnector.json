@@ -1,0 +1,23 @@
+{
+    "name": "CassandraConnector",
+    "config": {
+        "connector.class": "com.datastax.oss.kafka.sink.CassandraSinkConnector",
+        "tasks.max": "1",
+        "keyspace": "logkeyspace", 
+        "table": "log_table",
+        "topics": "logTopic",
+        "contactPoints": "172.18.0.11",
+        "port": "9042",
+        "auth.username": "admin", 
+        "auth.password": "admin", 
+        "topic.logTopic.logkeyspace.log_table.mapping": "host=value.host, user_identifier=value.user_identifier, datetime=value.datetime, method=value.method, request=value.request, protocol=value.protocol, status=value.status, bytes=value.bytes, referer=value.referer",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "key.converter.schemas.enable": "false",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "RenameFields",
+        "transforms.RenameFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.RenameFields.renames": "user-identifier:user_identifier",
+        "loadBalancing.localDc": "datacenter1"
+    }
+ }

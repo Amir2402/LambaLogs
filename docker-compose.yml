@@ -21,7 +21,7 @@ services:
       ZOOKEEPER_SERVER_ID: 1 
     ports:
       - "2181:2181"
-
+  
   # Kafka Broker 1
   kafka-broker-1:
     image: confluentinc/cp-kafka
@@ -122,7 +122,7 @@ services:
       - "8082:8082"
   
   kafka-connect:
-    image: 'confluentinc/cp-kafka-connect'
+    image: confluentinc/cp-kafka-connect
     container_name: 'kafka-connect'
     hostname: 'kafka-connect'
     networks:
@@ -157,7 +157,7 @@ services:
       - kafka-broker-2
       
   kafka-sr:
-    image: 'confluentinc/cp-schema-registry'
+    image: confluentinc/cp-schema-registry
     container_name: 'kafka-sr'
     hostname: 'kafka-sr'
     networks:
@@ -176,3 +176,17 @@ services:
       - kafka-broker-1
       - kafka-broker-2 
       - kafka-broker-3
+
+  cassandra:
+    image: cassandra
+    container_name: cassandra
+    hostname: cassandra
+    networks:
+      lambdaLogs:
+        ipv4_address: 172.18.0.11
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_USER=admin
+      - CASSANDRA_PASSWORD=admin
+      - CASSANDRA_DC=cassDC
