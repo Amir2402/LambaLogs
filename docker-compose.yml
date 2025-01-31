@@ -79,6 +79,10 @@ services:
     networks:
       lambdaLogs:
         ipv4_address: 172.18.0.5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
     volumes:
       - ./consumers:/opt/bitnami/spark/consumers
     environment:
@@ -95,7 +99,11 @@ services:
     container_name: spark-worker-1
     networks:
       lambdaLogs:
-        ipv4_address: 172.18.0.6
+        ipv4_address: 172.18.0.6    
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
@@ -112,6 +120,10 @@ services:
     networks:
       lambdaLogs:
         ipv4_address: 172.18.0.7
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077

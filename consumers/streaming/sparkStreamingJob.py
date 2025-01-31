@@ -1,39 +1,60 @@
 from pyspark.sql import SparkSession 
 from pyspark.sql.functions import *
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from requests import get 
+from schemas import logSchema, ipSchema
 
-spark = (SparkSession.
-         builder.
-         config("spark.num.executors", "2").
-         appName("StreamingJobLogAnalysis").
-         getOrCreate())
+def store_ip_to_cassandra(streamDf, batchId):
+    hosts_df = streamDf.select("host").collect()
+    records = [] 
 
-streamDf = (spark.readStream.format("kafka").
+    for row in hosts_df: 
+        host = row['host']
+        ip_record = get(f'http://ip-api.com/json/{host}').json()
+        records.append(ip_record) 
+    
+    ip_df = spark.createDataFrame(records, schema = ipSchema)
+    ip_df.show()
+
+    (ip_df.write.
+        format("org.apache.spark.sql.cassandra").
+        mode("append").
+        option("keyspace", "logkeyspace").
+        option("table", "ipinfo").
+        save())
+    
+if __name__ == '__main__':
+    spark = (SparkSession.
+            builder.
+            config("spark.cassandra.connection.host", "cassandra").
+            config("spark.cassandra.connection.port", "9042").
+            appName("StreamingJobLogAnalysis").
+            getOrCreate())
+
+    streamDf = (spark.readStream.format("kafka").
             option("kafka.bootstrap.servers", "kafka-broker-1:9092").
             option("subscribe", "logTopic").load())
 
-schema = StructType([
-    StructField("host", StringType(), True),
-    StructField("user-identifier", StringType(), True),
-    StructField("datetime", StringType(), True),
-    StructField("method", StringType(), True),
-    StructField("request", StringType(), True),
-    StructField("protocol", StringType(), True),
-    StructField("status", IntegerType(), True),
-    StructField("bytes", IntegerType(), True),
-    StructField("referer", StringType(), True)
-])
+    streamDf = (streamDf.
+                selectExpr("CAST(value AS STRING)").
+                select(from_json(col("value"), logSchema).alias("logInJson")).
+                select('logInJson.*'))
 
-streamDf = (streamDf.
-            selectExpr("CAST(value AS STRING)").
-            select(from_json(col("value"), schema).alias("logInJson")).
-            select('logInJson.*'))
+    (streamDf.
+    writeStream.
+    foreachBatch(store_ip_to_cassandra).
+    outputMode("append").
+    start().
+    awaitTermination())
 
-outputDf = (streamDf.
-            writeStream.
-            format("console").
-            outputMode("append").
-            start()) 
+    # streamDf = stream_reader(spark) 
+    # ipRecord = get_ip_info(streamDf) 
+    # print(ipRecord)
 
-outputDf.awaitTermination()
+    # outputDf = (streamDf.
+    #             writeStream.
+    #             format("console").
+    #             outputMode("append").
+    #             start()) 
+
+    # outputDf.awaitTermination()
 
