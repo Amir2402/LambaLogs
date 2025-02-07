@@ -21,7 +21,7 @@ def store_ip_to_cassandra(streamDf, batchId):
         option("keyspace", "logkeyspace").
         option("table", "ipinfo").
         save())
-    
+
 if __name__ == '__main__':
     spark = (SparkSession.
             builder.
@@ -45,16 +45,4 @@ if __name__ == '__main__':
     outputMode("append").
     start().
     awaitTermination())
-
-    # streamDf = stream_reader(spark) 
-    # ipRecord = get_ip_info(streamDf) 
-    # print(ipRecord)
-
-    # outputDf = (streamDf.
-    #             writeStream.
-    #             format("console").
-    #             outputMode("append").
-    #             start()) 
-
-    # outputDf.awaitTermination()
 

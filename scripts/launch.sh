@@ -1,4 +1,4 @@
-#/usr/bin/bash
+#!/usr/bin/bash
 
 COMPOSE_FILE="../docker-compose.yml"
 
@@ -26,6 +26,8 @@ fi
 
 ./setUpCassandra.sh
 
+sudo docker exec -i postgres_db psql -U admin -d logs_db -f /dev/stdin < ./PostgresSchema.sql
+
 ../input/flog -l -d 2 -f json | python ../input/logProducer.py & 
 
 ProcessID="$!"
@@ -36,8 +38,9 @@ sudo docker exec -it spark-worker-1 pip install requests
 sudo docker exec -it spark-worker-2 pip install requests
 
 sudo docker exec -it spark-master bash spark-submit --master spark://spark-master:7077 \
-    --deploy-mode client --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0 \
-    --conf spark.executor.cores=2 \
-    --conf spark.executor.memory=1G ./consumers/streaming/sparkStreamingJob.py 
+    --deploy-mode client --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4,org.postgresql:postgresql:42.5.0 \
+    --conf spark.executor.cores=1 \
+    --total-executor-cores 1 \
+    --conf spark.executor.memory=1G ./consumers/streaming/AggregateToPg.py
 
 kill "$ProcessID"

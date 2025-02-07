@@ -1,16 +1,18 @@
 CREATE KEYSPACE logKeyspace WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 1};
 
-CREATE TABLE logKeyspace.log_table(host text PRIMARY KEY,
-                                    user_identifier text, 
-                                    datetime text, 
-                                    method text, 
-                                    request text,
-                                    protocol text,
-                                    status text,
-                                    bytes text,
-                                    referer text);
+CREATE TABLE logKeyspace.log_table(
+    host text PRIMARY KEY,
+    user_identifier text, 
+    datetime text, 
+    method text, 
+    request text,
+    protocol text,
+    status text,
+    bytes text,
+    referer text
+);
 
-CREATE TABLE logKeyspace.ipInfo (
+CREATE TABLE logKeyspace.ipInfo(
     query TEXT PRIMARY KEY,
     status TEXT,
     continent TEXT,

@@ -1,6 +1,5 @@
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, BooleanType
 
-
 ipSchema = StructType([
     StructField("query", StringType(), True),
     StructField("status", StringType(), True),
