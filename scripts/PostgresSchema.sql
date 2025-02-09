@@ -22,3 +22,14 @@ CREATE TABLE real_time_logs.method_per_window(
     request_method_count INTEGER
 );
 
+CREATE TABLE batch_logs.host_informations(
+    host VARCHAR,
+    time_stamp TIMESTAMP,
+    proxy VARCHAR,
+    country VARCHAR,
+    isp VARCHAR,
+    org VARCHAR
+);
+
+-- DROP TABLE batch_logs.host_informations; 
+SELECT * FROM batch_logs.host_informations;

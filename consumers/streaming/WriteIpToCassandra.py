@@ -1,7 +1,10 @@
 from pyspark.sql import SparkSession 
 from pyspark.sql.functions import *
 from requests import get 
-from schemas import logSchema, ipSchema
+import sys 
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from schemas import ipSchema, logSchema
 
 def store_ip_to_cassandra(streamDf, batchId):
     hosts_df = streamDf.select("host").collect()

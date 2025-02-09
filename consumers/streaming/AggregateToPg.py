@@ -1,5 +1,8 @@
 from pyspark.sql import SparkSession 
 from pyspark.sql.functions import *
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  
+print(sys.path)
 from schemas import logSchema
 
 def AggregateToPg(streamDf, batchId):
